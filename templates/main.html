@@ -1,0 +1,108 @@
+{% extends 'background.html' %}
+{% block head %} 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>  
+        /* Imports */
+        @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
+    </style>
+    <link rel = "stylesheet" href = "/static/main.css">
+
+    
+{% endblock %}
+
+{% block body %}
+<div>
+    <img src="/static/metromap.png" alt="Station Map" class="center">
+</div>
+<div class="row">
+    <div class="column">
+      <table class = "left-table">
+        <thead>
+            <tr>
+                <th>Line Color</th>
+                <th>Line Name</th>
+                <th>Origin</th>
+                <th>Destination</th>
+                <th>Line Length</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for line in network.getLines() %}
+            <tr>
+                <td bgcolor = {{line.getColour()}}></td>
+                <td class="line-link">
+                    <!-- Active Line -->
+                    {% if (lineId == line.getId()) %}
+                        <a href="/line/{{line.getId()}}" style="font-weight: 800;">{{line.getName()}}</a>
+                    {% else %}
+                        <a href="/line/{{line.getId()}}">{{line.getName()}}</a>
+                    {% endif %}
+                </td>
+                <td>{{line.getStartRoute()}}</td>
+                <td>{{line.getEndRoute()}}</td>
+                <td>{{line.getNumStations()}}</td>
+                <td bgcolor = {{line.getStatusColour()}}></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="column">
+        <table class = "right-table">
+            <thead>
+                <tr>
+                    <th>Train Location</th>
+                    <th>Status</th>
+                    <th>Station</th>
+                    <th>Work</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if (lineId != None) %}
+                    {% for count, station in enumerate(network.getLineWithLineID(lineId).getStations(), start=1) %}
+                    <tr>
+                        {% if (count == train_loc) %}
+                            <td bgcolor = "#702963">Current Train Location</td>
+                        {% elif count == station_set[0] %}
+                            <td bgcolor = "#f5c542">Scanning Station...</td>
+                        {% else %}
+                            <td></td>
+                        {% endif %}
+                        <td bgcolor = {{station.getStatusColour()}}></td>
+                        <td>{{station.name}}</td>
+                        <td bgcolor = {{station.getWorksColour()}}></td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div>
+    {% if (lineId != None) %}
+        <form method="post" action="/line/{{network.getLineWithLineID(lineId).getId()}}">
+            <input class="play" type="submit" text="Go to next stations" value="{{train_loc}}" name="move_train" />
+        </form>
+    {% endif %}
+    </div>
+    {% if (lineId != None) %}
+        {% if network.getLineWithLineID(lineId).getNumStations() > station_set[0]-1 %}
+            <div>
+                <h2>Still from camera feed at current station:      {{network.getLineWithLineID(lineId).getStations()[station_set[0]-1].name}}</h2>
+                <h3></h3>
+            </div>
+            <div>
+                <!-- {{station_set[0]}} -->
+                {% if prediction == False %}
+                    <h2>Model Result: Track clear</h2>
+                {% else %}
+                    <h2>Model Result: Obstacle detected on the track</h2>
+                {% endif %}
+            </div>
+            <div>
+                <img src="{{station_img}}" alt="Station Still Frame">
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}
